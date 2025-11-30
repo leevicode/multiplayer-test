@@ -487,6 +487,11 @@ void handleEvents(ENetHost *client, Player players[], int *myUUID)
 
 void handlePackets(PacketEvent *packet, Player players[], int *myUUID)
 {
+    if (*myUUID == packet->uuid && packet->type != E_UUIDRECEIVED)
+    {
+        // ignore packets regarding me
+        return;
+    }
     Player *targetPlayer = findPlayer(players, packet->uuid);
 
     switch (packet->type)
