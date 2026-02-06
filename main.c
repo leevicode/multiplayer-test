@@ -69,8 +69,8 @@ Matrix m = (Matrix) {
     0, 0, 3, 0,
     0, 0, 0, 1
 };
-int material_index = 0;
-int mesh_index = 0;
+
+Ray ray;
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
@@ -125,8 +125,8 @@ int main(void)
 
     // Game initialization
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    const int screenWidth = 1920;
+    const int screenHeight = 1080;
 
     InitWindow(screenWidth, screenHeight,
         "raylib [core] example - 3d camera fps");
@@ -145,9 +145,11 @@ int main(void)
     UpdateCameraFPS(&camera, &player); // Update camera parameters
 
     // DisableCursor(); // Limit cursor to relative movement inside the window
-
+    // #define FLAG_VSYNC_HINT
     SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
+    ToggleFullscreen();
+    DisableCursor();
     // Main game loop
     printf("Player: %p, players: %p, player.x = %f\n", &player, players,
         player.body.position.x);
@@ -172,11 +174,8 @@ void mainLoop(ENetHost* client, ENetPeer* server, Player players[],
             DisableCursor();
         if (IsKeyPressed(KEY_E))
             EnableCursor();
-        if (IsKeyPressed(KEY_Z)) {
-            material_index++;
-        }
-        if (IsKeyPressed(KEY_X)) {
-            mesh_index++;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            ray = (Ray) { camera->position, Vector3Subtract(camera->target, camera->position) };
         }
 
         handleEvents(client, players, &(player->uuid));
@@ -327,6 +326,14 @@ void UpdateBody(Body* body, float rot, Vector2 input, bool jumpPressed,
             body->velocity = reflectedVelocity;
             if (collision.normal.y > 0.3) {
                 body->isGrounded = true;
+                if (body->velocity.y < 0) {
+                    body->velocity.y = 0;
+                }
+                body->velocity = Vector3Subtract(
+                    body->velocity,
+                    Vector3Scale(
+                        Vector3Normalize(body->velocity),
+                        Clamp(delta * decel / 10, 0, delta * Vector3Length(body->velocity) / 2)));
                 // float multiplier = pow(0.9, delta * 100);
                 //  body->velocity = Vector3Scale(body->velocity, multiplier);
             }
@@ -409,6 +416,7 @@ static void DrawLevel(Player players[], Player* player)
 
     // Red sun
     DrawSphere((Vector3) { 300.0f, 300.0f, 0.0f }, 100.0f, (Color) { 255, 0, 0, 255 });
+    DrawRay(ray, RED);
 
     // Players
     for (size_t i = 0; i < MAX_PLAYERS; i++) {
