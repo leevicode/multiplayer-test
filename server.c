@@ -3,6 +3,10 @@
 #include "stdlib.h"
 #include "leevi_types.h"
 
+// Declarations
+// -------------------------------------------------------------------------
+void mainLoop(ENetHost *server);
+
 int main()
 {
     printf("ghello\n");
